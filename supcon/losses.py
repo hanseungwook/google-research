@@ -237,7 +237,7 @@ def _cap_positives_mask(untiled_mask, diagonal_mask, num_views, positives_cap):
   return untiled_mask * untiled_mask_capped
 
 
-def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
+def _create_tiled_masks(untiled_mask, diagonal_mask, topk_mask, num_views,
                         num_anchor_views, positives_cap):
   r"""Creates tiled versions of untiled mask.
 
@@ -269,6 +269,9 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
       Otherwise, it is a slice of a [global_batch_size, global_batch_size]
       identity matrix that indicates where in the global batch the local batch
       is located.
+    topk_mask: Tensor with the same shape as `untiled_mask`. 
+      ones where the item is in the topk prediction classes
+      zeros where the item is not in the topk prediction classes
     num_views: Integer number of total views.
     num_anchor_views: Integer number of anchor views.
     positives_cap: Integer maximum number of positives *other* than
@@ -303,8 +306,12 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
   # diagonal representing the anchor view itself, before the capping procedure.
   # Any element that is not an `uncapped` positive is a negative.
   uncapped_positives_mask = tf.tile(untiled_mask, [num_anchor_views, num_views])
+  tiled_topk_mask = tf.tile(topk_mask, [num_anchor_views, num_views])
 
   negatives_mask = 1. - uncapped_positives_mask
+  negatives_mask = tf.cast(negatives_mask, tf.bool)
+  stacked_negatives_mask = tf.stack([negatives_mask, tiled_topk_mask], axis=0)
+  negatives_mask = tf.cast(tf.reduce_all(stacked_negatives_mask, axis=0), tf.float32)
 
   # Select only 'positives_cap' positives by selecting top-k values of 0/1 mask
   # and scattering ones into those indices. This capping is done on only
@@ -329,6 +336,7 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
 
 def contrastive_loss(features,
                      labels=None,
+                     topk_labels=None,
                      temperature=1.0,
                      contrast_mode=enums.LossContrastMode.ALL_VIEWS,
                      summation_location=enums.LossSummationLocation.OUTSIDE,
@@ -462,6 +470,9 @@ def contrastive_loss(features,
   features = tf.convert_to_tensor(features)
   labels = tf.convert_to_tensor(labels) if labels is not None else None
 
+  # [local_batch_size, k, num_classes]
+  topk_labels = tf.convert_to_tensor(topk_labels) if topk_labels is not None else None
+
   local_batch_size, num_views = _validate_contrastive_loss_inputs(
       features, labels, contrast_mode, summation_location, denominator_mode,
       positives_cap)
@@ -483,6 +494,9 @@ def contrastive_loss(features,
                                                    0).value
   local_replica_id = utils.local_tpu_replica_id()
 
+  # [global_batch_size, k, num_classes]
+  # global_topk_labels = utils.cross_replica_concat(topk_labels)
+
   # Generate the [local_batch_size, global_batch_size] slice of the
   # [global_batch_size, global_batch_size] identity matrix that corresponds to
   # the current replica.
@@ -500,6 +514,13 @@ def contrastive_loss(features,
     labels = tf.cast(labels, tf.float32)  # TPU matmul op unsupported for ints.
     global_labels = utils.cross_replica_concat(labels)
     mask = tf.linalg.matmul(labels, global_labels, transpose_b=True)
+
+    # Create top5 mask for negatives: [local_batch_size, global_batch_size]
+    topk_mask = tf.linalg.matmul(topk_labels, tf.transpose(global_labels, perm=[1, 0, 2]), transpose_b=True)
+    topk_mask = tf.cast(topk_mask, tf.bool)
+    topk_mask = tf.reduce_any(topk_mask, axis=0)
+    topk_mask = tf.ensure_shape(topk_mask, [local_batch_size, global_batch_size])
+
   mask = tf.ensure_shape(mask, [local_batch_size, global_batch_size])
 
   # To streamline the subsequent TF, the first two dimensions of
