@@ -19,8 +19,8 @@ import six
 
 import tensorflow.compat.v2 as tf
 from tensorflow.keras import backend as K
-from supcon import enums
-from supcon import utils
+import enums
+import utils
 
 
 # Derived wholesale from (unexported) LossFunctionWrapper in keras losses.py

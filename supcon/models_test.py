@@ -19,8 +19,8 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from supcon import enums
-from supcon import models
+import enums
+import models
 
 
 class ResNetTest(tf.test.TestCase, parameterized.TestCase):

@@ -20,10 +20,10 @@ from absl.testing import parameterized
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
-from supcon import enums
-from supcon import hparams
-from supcon import inputs
-from supcon import preprocessing
+import enums
+import hparams
+import inputs
+import preprocessing
 
 FLAGS = flags.FLAGS
 ALL_MODES = (tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL,

@@ -19,7 +19,7 @@ import enum
 
 from absl.testing import absltest
 import attr
-from supcon import hparam
+import hparam
 
 
 class ValidNumericEnum(enum.Enum):

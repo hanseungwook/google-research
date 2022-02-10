@@ -18,7 +18,7 @@
 
 import tensorflow.compat.v1 as tf
 
-from supcon import blocks as blocks_lib
+import blocks as blocks_lib
 
 
 class _BlockGroup(tf.layers.Layer):

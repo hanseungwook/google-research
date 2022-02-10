@@ -23,9 +23,9 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from supcon import enums
-from supcon import hparams
-from supcon import preprocessing
+import enums
+import hparams
+import preprocessing
 
 
 @contextlib.contextmanager

@@ -18,9 +18,9 @@
 from absl.testing import parameterized
 import tensorflow.compat.v1 as tf
 
-from supcon import enums
-from supcon import hparams
-from supcon import launcher
+import enums
+import hparams
+import launcher
 
 
 class LauncherTest(tf.test.TestCase, parameterized.TestCase):

@@ -24,14 +24,14 @@ import tensorflow.compat.v1 as tf
 import tensorflow.compat.v2 as tf2
 import tf_slim as slim
 
-from supcon import enums
-from supcon import hparams as hparams_lib
-from supcon import hparams_flags
-from supcon import inputs
-from supcon import losses
-from supcon import models
-from supcon import preprocessing
-from supcon import utils
+import enums
+import hparams as hparams_lib
+import hparams_flags
+import inputs
+import losses
+import models
+import preprocessing
+import utils
 
 flags.DEFINE_string(
     'hparams', None,

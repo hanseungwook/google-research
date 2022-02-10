@@ -20,7 +20,7 @@ import inspect
 
 import tensorflow.compat.v1 as tf
 
-from supcon import blocks
+import blocks
 
 
 class ProjectionHead(tf.layers.Layer):
