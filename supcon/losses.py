@@ -33,7 +33,6 @@ class LossFunctionWrapper(tf.keras.losses.Loss):
                name=None,
                **kwargs):
     """Initializes `LossFunctionWrapper` class.
-
     Args:
       fn: The loss function to wrap, with signature `fn(y_true, y_pred,
         **kwargs)`.
@@ -55,11 +54,9 @@ class LossFunctionWrapper(tf.keras.losses.Loss):
 
   def call(self, y_true, y_pred):
     """Invokes the `LossFunctionWrapper` instance.
-
     Args:
       y_true: Ground truth values.
       y_pred: The predicted values.
-
     Returns:
       Loss values per sample.
     """
@@ -75,7 +72,6 @@ class LossFunctionWrapper(tf.keras.losses.Loss):
 
 class ContrastiveLoss(LossFunctionWrapper):
   """Contrastive Loss for keras models.
-
   Attributes:
     reduction: (Optional) Type of `tf.keras.losses.Reduction` to apply to loss.
       Default value is `AUTO`. `AUTO` indicates that the reduction option will
@@ -109,7 +105,6 @@ def _validate_contrastive_loss_inputs(features, labels, contrast_mode,
                                       summation_location, denominator_mode,
                                       positives_cap):
   r"""Validates inputs for contrastive_loss().
-
   Args:
     features: Tensor of rank at least 3, where the first 2 dimensions are
       batch_size and num_views, and the remaining dimensions are the feature
@@ -128,10 +123,8 @@ def _validate_contrastive_loss_inputs(features, labels, contrast_mode,
       by selecting which positives are present in the summation, and which
       positives contribure to the denominator if denominator_mode ==
       enums.LossDenominatorMode.ALL.
-
   Returns:
     Tuple containing batch_size and num_views values.
-
   Raises:
     ValueError if any of the inputs are invalid.
   """
@@ -176,11 +169,9 @@ def _validate_contrastive_loss_inputs(features, labels, contrast_mode,
 
 def _cap_positives_mask(untiled_mask, diagonal_mask, num_views, positives_cap):
   r"""Cap positives in the provided untiled_mask.
-
       'positives_cap' specifies the maximum number of positives *other* than
       augmentations of the anchor. Positives will be evenly sampled from all
       views.
-
   Args:
     untiled_mask: Tensor of shape [local_batch_size, global_batch_size] that has
       entry (r, c) == 1 if feature entries in rows r and c are from the same
@@ -199,7 +190,6 @@ def _cap_positives_mask(untiled_mask, diagonal_mask, num_views, positives_cap):
       by selecting which positives are present in the summation, and which
       positives contribure to the denominator if denominator_mode ==
       enums.LossDenominatorMode.ALL.
-
   Returns:
     A tf.Tensor with the modified `untiled_mask`.
   """
@@ -240,7 +230,6 @@ def _cap_positives_mask(untiled_mask, diagonal_mask, num_views, positives_cap):
 def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
                         num_anchor_views, positives_cap):
   r"""Creates tiled versions of untiled mask.
-
   Tiles `untiled_mask`, which has shape [local_batch_size, global_batch_size]
   by factors of [num_anchor_views, num_views], and then generates two masks from
   it. In both cases, the mask dimensions are ordered by view and then by sample,
@@ -257,7 +246,6 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
       row in `untiled_mask`.
     negatives_mask: Entry (row = i, col = j) is 1 if features i and j are
       different classes. Otherwise the entry is 0.
-
   Args:
     untiled_mask: Tensor of shape [local_batch_size, global_batch_size], where
       local_batch_size <= global_batch_size, that has entry (r, c) == 1 if
@@ -278,7 +266,6 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
       by selecting which positives are present in the summation, and which
       positives contribure to the denominator if denominator_mode ==
       enums.LossDenominatorMode.ALL.
-
   Returns:
     Tuple containing positives_mask and negatives_mask tensors.
   """
@@ -305,13 +292,6 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
   uncapped_positives_mask = tf.tile(untiled_mask, [num_anchor_views, num_views])
 
   negatives_mask = 1. - uncapped_positives_mask
-<<<<<<< Updated upstream
-=======
-
-  negatives_mask = tf.cast(negatives_mask, tf.bool)
-  stacked_negatives_mask = tf.stack([negatives_mask, tiled_topk_mask], axis=0)
-  negatives_mask = tf.cast(tf.reduce_all(stacked_negatives_mask, axis=0), tf.float32)
->>>>>>> Stashed changes
 
   # Select only 'positives_cap' positives by selecting top-k values of 0/1 mask
   # and scattering ones into those indices. This capping is done on only
@@ -343,61 +323,45 @@ def contrastive_loss(features,
                      positives_cap=-1,
                      scale_by_temperature=True):
   r"""Contrastive loss over features.
-
   Implemented as described in: https://arxiv.org/abs/2004.11362, Equation 2.
-
   Given `num_views` different views of each of `batch_size` samples, let `f_i`
   (i \in [1, 2 ... (num_views * batch_size)]) denote each respective feature
   vector. The contrastive loss then takes the following form:
-
     L = \sum_{i} L_i
-
   where each L_i is computed as:
-
     L_i = -\tau * \sum_{k \in P(i)} \log(p_{ik})    (1)
-
   where P(i) is the set of positives for entry i (distinct from i) and where:
-
                        \exp(f_i^T f_k / \tau)
     p_{ik} = ----------------------------------------                        (2)
              \sum_{j \in A(i)} \exp(f_i^T f_j / \tau)
-
   where A(i) is the set of all positives or negatives (distinct from i). `i` is
   the anchor, and \tau is the temperature.
-
   This maximizes the likelihood of a given (anchor, positive) pair with
   respect to all possible pairs where the first member is the anchor and the
   second member is a positive or a negative.
-
   A typical way to define a positive is to define samples from the
   same class (but not the anchor itself) regardless of what view they are from.
   Similarly, a typical way to define a negative is for it to be any view of a
   sample from a different class.
-
   There are two ways to define which feature pairs should be treated as
   positives and negatives. All views of the same sample are always treated as
   positives. You can declare other samples to be positives by providing `labels`
   such that all samples with the same label will be positives for each other.
-
   If `labels` is not provided then we default to every sample belonging to its
   own unique class. Therefore, the only positive used is another view of the
   anchor itself. This implements the loss as described in:
-
     https://arxiv.org/pdf/2002.05709.pdf
     A Simple Framework for Contrastive Learning of Visual Representations
     Chen T., Kornblith S., Norouzi M., Hinton G.
-
   It is recommended to use features whose L_2 norm is 1. since that ensures
   that the loss does not return NaN values without changing the intended
   behaviour of the loss function.
-
   In (1) above, note that the summation over positives is located outside of the
   \log(). However, one can permute these two operations. The result is Eq. 3 in
   https://arxiv.org/abs/2004.11362. Users can specify the location of the
   summation relative to the \log() via the `summation_location' argmument:
    - 'out': Eq. 2 in https://arxiv.org/abs/2004.11362.
    - 'in' : Eq. 3 in https://arxiv.org/abs/2004.11362.
-
   Additionally, in (2) above, note that the denominator sums over *all* entries
   distinct from i. One can change which terms are included in the denominator
   via the `denominator_mode` argument:
@@ -409,7 +373,6 @@ def contrastive_loss(features,
    - LossDenominatorMode.ONLY_NEGATIVES: All negatives are included but no
              positives are, not even the single positive in the numerator of
              (2).
-
   On TPUs, this method will internally perform the cross-replica operations that
   enable using the samples from all cores in computing the loss. The inputs to
   this function should be the features and labels from a single core and each
@@ -417,13 +380,11 @@ def contrastive_loss(features,
   positives and negatives from the full global batch. Since the loss for each
   anchor is only computed on one TPU core, it's still necessary to have a
   cross-replica reduction in the final loss computation.
-
   Also, though it is not applicable to multiview contrastive learning, this
   function will work if |features| contains only 1 view. In the high batch size
   limit, the implemented contrastive loss with only 1 view, positives_cap = 1,
   and temperature = 1.0 is equivalent to the N-pairs loss
   (https://papers.nips.cc/paper/6200-improved-deep-metric-learning-with-multi-class-n-pair-loss-objective.pdf)
-
   Args:
     features: A Tensor of rank at least 3, where the first 2 dimensions are
       batch_size and num_views, and the remaining dimensions are the feature
@@ -457,11 +418,9 @@ def contrastive_loss(features,
     scale_by_temperature: Boolean. Whether to scale the loss by `temperature`.
       The loss gradient naturally has a 1/temperature scaling factor, so this
       counteracts it.
-
   Returns:
     Scalar tensor with contrastive loss value with shape [batch_size] and dtype
     tf.float32. The loss for each batch element is the mean over all views.
-
   Raises:
     ValueError if the shapes of any of the Tensors are unexpected, or if both
     `labels` and `mask` are not `None`.
@@ -507,16 +466,6 @@ def contrastive_loss(features,
     labels = tf.cast(labels, tf.float32)  # TPU matmul op unsupported for ints.
     global_labels = utils.cross_replica_concat(labels)
     mask = tf.linalg.matmul(labels, global_labels, transpose_b=True)
-<<<<<<< Updated upstream
-=======
-
-    # Create top5 mask for negatives: [local_batch_size, global_batch_size]
-    topk_mask = tf.linalg.matmul(topk_labels, tf.transpose(global_labels, perm=[1, 0, 2]), transpose_b=True) # (k, local_batch_size, num_classes) x (global_batch_size, num_classes)^T
-    topk_mask = tf.cast(topk_mask, tf.bool)
-    topk_mask = tf.reduce_any(topk_mask, axis=0)
-    topk_mask = tf.ensure_shape(topk_mask, [local_batch_size, global_batch_size])
-
->>>>>>> Stashed changes
   mask = tf.ensure_shape(mask, [local_batch_size, global_batch_size])
 
   # To streamline the subsequent TF, the first two dimensions of
