@@ -19,8 +19,8 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v2 as tf
 
-from supcon import enums
-from supcon import losses
+import enums
+import losses
 
 
 class LossesTest(tf.test.TestCase, parameterized.TestCase):

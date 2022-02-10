@@ -20,7 +20,7 @@ import re
 
 import tensorflow.compat.v1 as tf
 
-from supcon import enums
+import enums
 
 # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.tpu import tpu_function

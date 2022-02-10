@@ -20,7 +20,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from supcon import classification_head
+import classification_head
 
 
 class ClassificationHeadTest(tf.test.TestCase, parameterized.TestCase):

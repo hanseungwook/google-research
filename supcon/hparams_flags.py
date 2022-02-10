@@ -17,8 +17,8 @@
 
 from absl import flags
 
-from supcon import enums
-from supcon import hparams
+import enums
+import hparams
 
 FLAGS = flags.FLAGS
 

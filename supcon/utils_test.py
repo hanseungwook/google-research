@@ -19,9 +19,9 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from supcon import blocks
-from supcon import enums
-from supcon import utils
+import blocks
+import enums
+import utils
 
 
 class CreateTrainOpTest(tf.test.TestCase):

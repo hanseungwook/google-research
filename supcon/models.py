@@ -17,10 +17,10 @@
 """The contrastive model."""
 
 import tensorflow.compat.v1 as tf
-from supcon import classification_head
-from supcon import enums
-from supcon import projection_head
-from supcon import resnet
+import classification_head
+import enums
+import projection_head
+import resnet
 
 
 class ContrastiveModel(tf.layers.Layer):

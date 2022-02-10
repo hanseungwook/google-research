@@ -20,7 +20,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from supcon import resnet as resnet_lib
+import resnet as resnet_lib
 
 
 class ResNetTest(tf.test.TestCase, parameterized.TestCase):

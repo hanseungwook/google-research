@@ -24,9 +24,9 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 import tensorflow_datasets as tfds
 
-from supcon import enums
-from supcon import preprocessing
-from supcon import utils
+import enums
+import preprocessing
+import utils
 
 InputData = collections.namedtuple('InputData', 'images labels')
 

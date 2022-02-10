@@ -23,15 +23,16 @@ from absl import flags
 import tensorflow.compat.v1 as tf
 import tensorflow.compat.v2 as tf2
 import tf_slim as slim
+import numpy as np
 
-from supcon import enums
-from supcon import hparams as hparams_lib
-from supcon import hparams_flags
-from supcon import inputs
-from supcon import losses
-from supcon import models
-from supcon import preprocessing
-from supcon import utils
+import enums
+import hparams as hparams_lib
+import hparams_flags
+import inputs
+import losses
+import models
+import preprocessing
+import utils
 
 flags.DEFINE_string(
     'hparams', None,
@@ -172,6 +173,9 @@ class ContrastiveTrainer:
 
     self.contrastive_loss = self._compute_contrastive_loss()
     self.cross_entropy_loss = self._compute_cross_entropy_loss()
+
+    # TODO: Finish top 5 implementation
+    self.top5_dict = np.load('top5_dict.npy')
 
   @property
   def train(self):

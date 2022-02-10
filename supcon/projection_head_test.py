@@ -20,7 +20,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from supcon import projection_head as projection_head_lib
+import projection_head as projection_head_lib
 
 
 class ProjectionHeadTest(tf.test.TestCase, parameterized.TestCase):

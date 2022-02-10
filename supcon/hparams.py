@@ -15,8 +15,8 @@
 
 """Hyperparameters for contrastive learning."""
 
-from supcon import enums
-from supcon import hparam
+import enums
+import hparam
 
 
 @hparam.s

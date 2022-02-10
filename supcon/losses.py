@@ -19,8 +19,8 @@ import six
 
 import tensorflow.compat.v2 as tf
 from tensorflow.keras import backend as K
-from supcon import enums
-from supcon import utils
+import enums
+import utils
 
 
 # Derived wholesale from (unexported) LossFunctionWrapper in keras losses.py
@@ -305,6 +305,13 @@ def _create_tiled_masks(untiled_mask, diagonal_mask, num_views,
   uncapped_positives_mask = tf.tile(untiled_mask, [num_anchor_views, num_views])
 
   negatives_mask = 1. - uncapped_positives_mask
+<<<<<<< Updated upstream
+=======
+
+  negatives_mask = tf.cast(negatives_mask, tf.bool)
+  stacked_negatives_mask = tf.stack([negatives_mask, tiled_topk_mask], axis=0)
+  negatives_mask = tf.cast(tf.reduce_all(stacked_negatives_mask, axis=0), tf.float32)
+>>>>>>> Stashed changes
 
   # Select only 'positives_cap' positives by selecting top-k values of 0/1 mask
   # and scattering ones into those indices. This capping is done on only
@@ -500,6 +507,16 @@ def contrastive_loss(features,
     labels = tf.cast(labels, tf.float32)  # TPU matmul op unsupported for ints.
     global_labels = utils.cross_replica_concat(labels)
     mask = tf.linalg.matmul(labels, global_labels, transpose_b=True)
+<<<<<<< Updated upstream
+=======
+
+    # Create top5 mask for negatives: [local_batch_size, global_batch_size]
+    topk_mask = tf.linalg.matmul(topk_labels, tf.transpose(global_labels, perm=[1, 0, 2]), transpose_b=True) # (k, local_batch_size, num_classes) x (global_batch_size, num_classes)^T
+    topk_mask = tf.cast(topk_mask, tf.bool)
+    topk_mask = tf.reduce_any(topk_mask, axis=0)
+    topk_mask = tf.ensure_shape(topk_mask, [local_batch_size, global_batch_size])
+
+>>>>>>> Stashed changes
   mask = tf.ensure_shape(mask, [local_batch_size, global_batch_size])
 
   # To streamline the subsequent TF, the first two dimensions of

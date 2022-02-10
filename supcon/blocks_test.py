@@ -18,7 +18,7 @@
 
 import tensorflow.compat.v1 as tf
 
-from supcon import blocks
+import blocks
 
 
 # This is the equivalent of tf.tpu.bfloat16_scope but it can run on CPU where
