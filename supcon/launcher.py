@@ -174,9 +174,6 @@ class ContrastiveTrainer:
     self.contrastive_loss = self._compute_contrastive_loss()
     self.cross_entropy_loss = self._compute_cross_entropy_loss()
 
-    # TODO: Finish top 5 implementation
-    self.top5_dict = np.load('top5_dict.npy')
-
   @property
   def train(self):
     return self.mode == enums.ModelMode.TRAIN
