@@ -723,6 +723,7 @@ def main(_):
       keep_checkpoint_every_n_hours=(FLAGS.keep_checkpoint_interval_secs /
                                      (60.0 * 60.0)),
       log_step_count_steps=100,
+      train_distribute=tf.distribute.MirroredStrategy(),
       session_config=session_config,
       tpu_config=tf.estimator.tpu.TPUConfig(
           iterations_per_loop=FLAGS.steps_per_loop,
