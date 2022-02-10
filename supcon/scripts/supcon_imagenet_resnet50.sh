@@ -28,7 +28,7 @@ set -x
   "${RESNET50x1_FLAGS[@]}" \
   "${IMAGENET_FLAGS[@]}" \
   "${SUPCON_FLAGS[@]}" \
-  --batch_size=6144 \
+  --batch_size=2048 \
   --augmentation_type=AUTOAUGMENT --augmentation_magnitude=1.0 \
   --temperature=0.1 \
   --stage_1_weight_decay=1e-3 --stage_2_weight_decay=1e-6 \
