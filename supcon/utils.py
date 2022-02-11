@@ -54,7 +54,7 @@ class LARSOptimizer(tf.train.Optimizer):
                classic_momentum=True,
                eta=ETA_DEFAULT,
                name='LARSOptimizer',
-               strategy=None):
+               strategy=[None]):
     r"""Constructs a LARSOptimizer.
 
     Notation based on: https://arxiv.org/pdf/1708.03888.pdf
@@ -116,7 +116,7 @@ class LARSOptimizer(tf.train.Optimizer):
         param_name = param.op.name
 
       # with tf.variable_scope('apply_grad_v', reuse=tf.AUTO_REUSE):
-      with self.strategy.scope():
+      with self.strategy[0].scope():
         v = tf.get_variable(
             name=f'{param_name}/{self.get_name()}/Momentum',
             shape=param.shape.as_list(),
@@ -548,7 +548,7 @@ def build_optimizer(learning_rate,
                     lars_exclude_from_weight_decay=('batch_normalization',),
                     is_tpu=False,
                     name='',
-                    strategy=None):
+                    strategy=[None]):
   """Build optimizer."""
   if optimizer_type == enums.Optimizer.MOMENTUM:
     optimizer = tf.train.MomentumOptimizer(
@@ -576,7 +576,7 @@ def build_optimizer(learning_rate,
         weight_decay=lars_weight_decay,
         exclude_from_weight_decay=lars_exclude_from_weight_decay,
         name=f'LARSOptimizer_{name}',
-        strategy=copy.deepcopy(strategy))
+        strategy=strategy)
   elif optimizer_type == enums.Optimizer.ADAM:
     optimizer = tf.train.AdamOptimizer(learning_rate)
   else:
