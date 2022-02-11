@@ -115,7 +115,7 @@ class LARSOptimizer(tf.train.Optimizer):
         param_name = param.op.name
 
       # with tf.variable_scope('apply_grad_v', reuse=tf.AUTO_REUSE):
-      with strategy.scope():
+      with self.strategy.scope():
         v = tf.get_variable(
             name=f'{param_name}/{self.get_name()}/Momentum',
             shape=param.shape.as_list(),
