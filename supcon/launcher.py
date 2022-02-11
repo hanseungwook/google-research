@@ -125,8 +125,7 @@ class ContrastiveTrainer:
                mode,
                num_classes,
                training_set_size,
-               is_tpu=False,
-               strategy=[None]):
+               is_tpu=False):
     self.model_inputs = model_inputs
     self.labels = labels
     self.train_global_batch_size = train_global_batch_size
@@ -136,7 +135,6 @@ class ContrastiveTrainer:
     self.num_classes = num_classes
     self.training_set_size = training_set_size
     self.is_tpu = is_tpu
-    self.strategy = strategy
     self._summary_dict = {}
 
     if not self.inference:
@@ -480,8 +478,7 @@ class ContrastiveTrainer:
             lars_exclude_from_weight_decay=lars_exclude_from_weight_decay,
             epsilon=stage_params.training.rmsprop_epsilon,
             is_tpu=self.is_tpu,
-            name=stage_name,
-            strategy=self.strategy)
+            name=stage_name)
 
       stage_1_optimizer = stage_optimizer(stage_1_learning_rate,
                                           self.hparams.stage_1, 'stage1')
@@ -656,8 +653,7 @@ def model_fn(features, labels, mode, params):
       mode=model_mode,
       num_classes=inputs.get_num_classes(hparams),
       training_set_size=inputs.get_num_train_images(hparams),
-      is_tpu=params['use_tpu'],
-      strategy=params['strategy'])
+      is_tpu=params['use_tpu'])
 
   if mode == tf.estimator.ModeKeys.PREDICT:
     predictions_map = trainer.signature_def_map()
@@ -720,7 +716,7 @@ def main(_):
     # RewriterConfig.OFF = 2
     session_config.graph_options.rewrite_options.layout_optimizer = 2
 
-  strategy = [tf.distribute.MirroredStrategy()] if not FLAGS.use_tpu else [None]
+  strategy = tf.distribute.MirroredStrategy() if not FLAGS.use_tpu else None
 
   run_config = tf.estimator.tpu.RunConfig(
       master=FLAGS.master,
@@ -731,7 +727,7 @@ def main(_):
       keep_checkpoint_every_n_hours=(FLAGS.keep_checkpoint_interval_secs /
                                      (60.0 * 60.0)),
       log_step_count_steps=100,
-      train_distribute=strategy[0],
+      train_distribute=strategy,
       session_config=session_config,
       tpu_config=tf.estimator.tpu.TPUConfig(
           iterations_per_loop=FLAGS.steps_per_loop,
@@ -744,8 +740,7 @@ def main(_):
   params = {
       'hparams': hparams,
       'use_tpu': FLAGS.use_tpu,
-      'data_dir': FLAGS.data_dir,
-      'strategy': strategy,
+      'data_dir': FLAGS.data_dir
   }
   estimator = tf.estimator.tpu.TPUEstimator(
       model_fn=model_fn,
