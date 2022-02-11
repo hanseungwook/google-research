@@ -17,6 +17,7 @@
 """Utility functions to build losses, optimizers, EMA etc."""
 
 import re
+import copy
 
 import tensorflow.compat.v1 as tf
 
@@ -575,7 +576,7 @@ def build_optimizer(learning_rate,
         weight_decay=lars_weight_decay,
         exclude_from_weight_decay=lars_exclude_from_weight_decay,
         name=f'LARSOptimizer_{name}',
-        strategy=strategy)
+        strategy=copy.deepcopy(strategy))
   elif optimizer_type == enums.Optimizer.ADAM:
     optimizer = tf.train.AdamOptimizer(learning_rate)
   else:

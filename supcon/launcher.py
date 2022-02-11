@@ -17,6 +17,7 @@
 """Contrastive Learning training/eval code."""
 
 import os
+import copy
 
 from absl import app
 from absl import flags
@@ -480,7 +481,7 @@ class ContrastiveTrainer:
             epsilon=stage_params.training.rmsprop_epsilon,
             is_tpu=self.is_tpu,
             name=stage_name,
-            strategy=self.strategy)
+            strategy=copy.deepcopy(self.strategy))
 
       stage_1_optimizer = stage_optimizer(stage_1_learning_rate,
                                           self.hparams.stage_1, 'stage1')
@@ -656,7 +657,7 @@ def model_fn(features, labels, mode, params):
       num_classes=inputs.get_num_classes(hparams),
       training_set_size=inputs.get_num_train_images(hparams),
       is_tpu=params['use_tpu'],
-      strategy=params['strategy'])
+      strategy=copy.deepcopy(params['strategy']))
 
   if mode == tf.estimator.ModeKeys.PREDICT:
     predictions_map = trainer.signature_def_map()
@@ -744,7 +745,7 @@ def main(_):
       'hparams': hparams,
       'use_tpu': FLAGS.use_tpu,
       'data_dir': FLAGS.data_dir,
-      'strategy': strategy,
+      'strategy': copy.deepcopy(strategy),
   }
   estimator = tf.estimator.tpu.TPUEstimator(
       model_fn=model_fn,
