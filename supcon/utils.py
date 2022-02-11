@@ -113,14 +113,17 @@ class LARSOptimizer(tf.train.Optimizer):
       else:
         param_name = param.op.name
 
+      def get_v():
+        with tf.distribute.get_strategy().scope():
+          v = tf.get_variable(
+              name=f'{param_name}/{self.get_name()}/Momentum',
+              shape=param.shape.as_list(),
+              dtype=param.dtype,
+              trainable=False,
+              initializer=tf.zeros_initializer())
+
+      tf.distribute.get_replica_context().merge_call(get_v)
       # with tf.variable_scope('apply_grad_v', reuse=tf.AUTO_REUSE):
-      with tf.distribute.get_strategy().scope():
-        v = tf.get_variable(
-            name=f'{param_name}/{self.get_name()}/Momentum',
-            shape=param.shape.as_list(),
-            dtype=param.dtype,
-            trainable=False,
-            initializer=tf.zeros_initializer())
 
       grad = tf.cast(grad, param.dtype)
 
